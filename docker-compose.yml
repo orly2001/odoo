@@ -14,11 +14,6 @@ services:
       - "5432:5432"
     networks:
       - odoo-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U odoo"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
   odoo:
     build:
@@ -26,8 +21,7 @@ services:
       dockerfile: Dockerfile-odoo
     container_name: odoo
     depends_on:
-      postgres:
-        condition: service_healthy
+      - postgres
     environment:
       DB_HOST: postgres
       DB_PORT: 5432

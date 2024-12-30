@@ -1,21 +1,28 @@
 FROM odoo:17.0
 
+# Passer temporairement à l'utilisateur root pour modifier les permissions
 USER root
 
-# Installez les outils nécessaires
-RUN apt-get update && apt-get install -y \
+# Corrigez les permissions et installez les paquets nécessaires
+RUN rm -rf /var/lib/apt/lists/* && \
+    mkdir -p /var/lib/apt/lists/partial && \
+    chmod -R 755 /var/lib/apt/lists && \
+    apt-get update && apt-get install -y \
     postgresql-client \
-    iputils-ping \
-    net-tools \
-    locales \
-    && apt-get clean
+    locales && \
+    apt-get clean
 
-# Configurer les locales
+# Configurez les locales
 RUN locale-gen en_US.UTF-8
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8
 
+# Copiez le script d'initialisation et rendez-le exécutable
+COPY init-odoo-db.sh /usr/local/bin/init-odoo-db.sh
+RUN chmod +x /usr/local/bin/init-odoo-db.sh
+
+# Revenez à l'utilisateur Odoo
 USER odoo
 
-CMD ["odoo"]
+ENTRYPOINT ["/usr/local/bin/init-odoo-db.sh"]
