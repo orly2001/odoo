@@ -1,0 +1,17 @@
+version: '3.1'
+services:
+  jenkins:
+    image: jenkins/jenkins:lts
+    restart: always
+    ports:
+      - '8185:8080'
+      - '22000:22'
+      - '50000:50000'
+    privileged: true
+    volumes:
+      - 'jenkins_home:/var/lib/jenkins/'
+      - '/var/run/docker.sock:/var/run/docker.sock'
+      - '/sys/fs/cgroup:/sys/fs/cgroup:ro'
+volumes:
+  jenkins_home:
+    driver: local

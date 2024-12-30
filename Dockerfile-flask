@@ -1,0 +1,17 @@
+FROM python:3.6-alpine
+
+# Installer les outils nécessaires
+RUN apk add --no-cache \
+    postgresql-client \
+    vim \
+    net-tools \
+    iputils
+
+WORKDIR /opt
+COPY . .
+
+# Installer Flask
+RUN pip install flask
+
+EXPOSE 8080
+CMD ["python", "app.py"]

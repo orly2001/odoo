@@ -1,0 +1,60 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:13
+    container_name: postgres
+    environment:
+      POSTGRES_USER: odoo
+      POSTGRES_PASSWORD: odoo_password
+      POSTGRES_DB: odoo_db
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - odoo-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U odoo"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  odoo:
+    build:
+      context: .
+      dockerfile: Dockerfile-odoo
+    container_name: odoo
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: odoo
+      DB_PASSWORD: odoo_password
+      DB_NAME: odoo_db
+    ports:
+      - "8069:8069"
+    networks:
+      - odoo-network
+
+  flask:
+    build:
+      context: .
+      dockerfile: Dockerfile-flask
+    container_name: site-vitrine
+    ports:
+      - "8080:8080"
+    environment:
+      ODOO_URL: http://odoo:8069
+      PGADMIN_URL: http://localhost:5050
+    networks:
+      - odoo-network
+
+volumes:
+  postgres-data:
+
+networks:
+  odoo-network:
+    driver: bridge
