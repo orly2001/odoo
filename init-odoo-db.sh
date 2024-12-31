@@ -1,28 +1,25 @@
 #!/bin/bash
-
-# Exporter les variables d'environnement nécessaires pour PostgreSQL
-export PGPASSWORD=${DB_PASSWORD}
-export PGUSER=${DB_USER}
-export PGHOST=${DB_HOST}
-export PGPORT=${DB_PORT}
-export PGDATABASE=${DB_NAME}
+set -e
 
 echo "Checking PostgreSQL connection..."
-until pg_isready -h $PGHOST -p $PGPORT -U $PGUSER; do
+
+# Attendre que PostgreSQL soit prêt
+while ! nc -z "$DB_HOST" "$DB_PORT"; do
   echo "PostgreSQL is unavailable - sleeping"
-  sleep 2
+  sleep 5
 done
 
 echo "PostgreSQL is up - checking database"
 
-# Vérifiez si la base de données existe, sinon créez-la
-psql -c "SELECT 1 FROM pg_database WHERE datname = '${PGDATABASE}';" | grep -q 1 || \
-  psql -c "CREATE DATABASE ${PGDATABASE} OWNER ${PGUSER};"
+export PGPASSWORD=$DB_PASSWORD
 
-# Ajouter des données ou initialiser la base si nécessaire
-if [ -f /usr/local/bin/init.sql ]; then
-  echo "Initializing database with init.sql..."
-  psql -d $PGDATABASE -f /usr/local/bin/init.sql
+# Vérifier si la base de données existe
+if ! psql -h "$DB_HOST" -U "$DB_USER" -lqt | cut -d \| -f 1 | grep -qw "$DB_NAME"; then
+  echo "Database $DB_NAME does not exist. Creating..."
+  createdb -h "$DB_HOST" -U "$DB_USER" "$DB_NAME"
+  echo "Database $DB_NAME created successfully."
+else
+  echo "Database $DB_NAME already exists."
 fi
 
 echo "Database initialization complete."

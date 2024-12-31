@@ -3,11 +3,11 @@ FROM odoo:17.0
 # Passer temporairement à l'utilisateur root pour modifier les permissions
 USER root
 
-# Corrigez les permissions et installez les paquets nécessaires
-RUN rm -rf /var/lib/apt/lists/* && \
-    mkdir -p /var/lib/apt/lists/partial && \
-    chmod -R 755 /var/lib/apt/lists && \
-    apt-get update && apt-get install -y \
+# Assurez-vous que les permissions sont corrigées
+RUN rm -rf /var/lib/apt/lists/* && mkdir -p /var/lib/apt/lists/partial && chmod -R 755 /var/lib/apt/lists
+
+# Mettez à jour et installez les paquets nécessaires
+RUN apt-get update && apt-get install -y \
     postgresql-client \
     locales && \
     apt-get clean
@@ -18,11 +18,9 @@ ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8
 
-# Copiez le script d'initialisation et rendez-le exécutable
+# Copiez le script d'initialisation
 COPY init-odoo-db.sh /usr/local/bin/init-odoo-db.sh
 RUN chmod +x /usr/local/bin/init-odoo-db.sh
 
-# Revenez à l'utilisateur Odoo
-USER odoo
-
-ENTRYPOINT ["/usr/local/bin/init-odoo-db.sh"]
+# Commande d'entrée qui initialise la base de données puis démarre Odoo
+CMD ["/bin/bash", "-c", "/usr/local/bin/init-odoo-db.sh && exec /entrypoint.sh odoo"]

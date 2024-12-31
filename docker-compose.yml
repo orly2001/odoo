@@ -16,6 +16,7 @@ services:
       - odoo-network
 
   odoo:
+    image: odoo:17.0
     build:
       context: .
       dockerfile: Dockerfile-odoo
@@ -41,7 +42,7 @@ services:
     ports:
       - "8080:8080"
     environment:
-      ODOO_URL: http://odoo:8069
+      ODOO_URL: http://localhost:8069
       PGADMIN_URL: http://localhost:5050
     networks:
       - odoo-network
